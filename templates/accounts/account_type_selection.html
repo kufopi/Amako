@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Choose Account Type{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Choose Account Type</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Student</h5>
+                                    <p class="card-text">Register as a student to submit complaints and track their status.</p>
+                                    <a href="{% url 'register_student' %}" class="btn btn-primary">Register as Student</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Staff</h5>
+                                    <p class="card-text">Register as staff to manage and respond to student complaints.</p>
+                                    <a href="{% url 'register_staff' %}" class="btn btn-secondary">Register as Staff</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

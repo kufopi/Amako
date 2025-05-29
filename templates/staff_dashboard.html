@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Staff Dashboard - {{ staff.get_role_display }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="sidebar p-3">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-user-shield fs-1 me-3 text-primary"></i>
+                    <div>
+                        <h5 class="mb-0">{{ staff.user.get_full_name }}</h5>
+                        <p class="text-muted mb-0">{{ staff.get_role_display }}</p>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h6 class="sidebar-heading text-muted">FILTERS</h6>
+                    <div class="list-group">
+                        <a href="?priority=CRIT" class="list-group-item list-group-item-action">
+                            <span class="badge bg-danger me-2">!</span> Critical
+                        </a>
+                        <a href="?priority=HIGH" class="list-group-item list-group-item-action">
+                            <span class="badge bg-warning me-2">!</span> High Priority
+                        </a>
+                        <a href="?status=PEND" class="list-group-item list-group-item-action">
+                            <span class="badge bg-secondary me-2">P</span> Pending
+                        </a>
+                        <a href="?" class="list-group-item list-group-item-action">
+                            <i class="fas fa-sync-alt me-2"></i> Reset Filters
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h6 class="sidebar-heading text-muted">CATEGORIES</h6>
+                    <div class="list-group">
+                        <a href="?category=MAIN" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tools me-2"></i> Maintenance
+                        </a>
+                        <a href="?category=SAFE" class="list-group-item list-group-item-action">
+                            <i class="fas fa-shield-alt me-2"></i> Safety
+                        </a>
+                        <a href="?category=CLASS" class="list-group-item list-group-item-action">
+                            <i class="fas fa-chalkboard-teacher me-2"></i> Classroom
+                        </a>
+                        <a href="?category=MISD" class="list-group-item list-group-item-action">
+                            <i class="fas fa-exclamation-triangle me-2"></i> Misdemeanor
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Staff Dashboard</h1>
+                <div class="d-flex">
+                    <div class="dropdown me-2">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort"></i> Sort
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                            <li><a class="dropdown-item" href="?sort=priority">By Priority</a></li>
+                            <li><a class="dropdown-item" href="?sort=date">By Date</a></li>
+                            <li><a class="dropdown-item" href="?sort=status">By Status</a></li>
+                        </ul>
+                    </div>
+                    <form class="d-flex">
+                        <input class="form-control me-2" type="search" placeholder="Search complaints" name="search">
+                        <button class="btn btn-outline-primary" type="submit">Search</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card text-white bg-danger mb-3">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="fas fa-exclamation-circle fa-3x me-3"></i>
+                            <div>
+                                <h5 class="card-title">{{ critical_count }}</h5>
+                                <p class="card-text">Critical Issues</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card text-white bg-warning mb-3">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="fas fa-clock fa-3x me-3"></i>
+                            <div>
+                                <h5 class="card-title">{{ pending_count }}</h5>
+                                <p class="card-text">Pending Cases</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="fas fa-check-circle fa-3x me-3"></i>
+                            <div>
+                                <h5 class="card-title">{{ resolved_count }}</h5>
+                                <p class="card-text">Resolved Today</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card text-white bg-info mb-3">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="fas fa-chart-line fa-3x me-3"></i>
+                            <div>
+                                <h5 class="card-title">{{ total_count }}</h5>
+                                <p class="card-text">Total Assigned</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Complaints Table -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ page_obj.paginator.count }} Complaints</h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Student</th>
+                                        <th>Category</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for complaint in page_obj %}
+                                        <tr class="{% if complaint.is_critical %}table-danger{% endif %}">
+                                            <td>{{ complaint.id }}</td>
+                                            <td>{{ complaint.title }}</td>
+                                            <td>{{ complaint.student.user.get_full_name }}</td>
+                                            <td>{{ complaint.get_category_display }}</td>
+                                            <td>
+                                                <span class="badge priority-{{ complaint.priority }}">
+                                                    {{ complaint.get_priority_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge status-{{ complaint.status }}">
+                                                    {{ complaint.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&laquo;</span>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for i in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == i %}
+                                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                        {% else %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&raquo;</span>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="alert alert-info">
+                            No complaints have been assigned to you yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Chart.js visualization of complaint priorities
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('priorityChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [{{ critical_count }}, {{ high_count }}, {{ medium_count }}, {{ low_count }}],
+                        backgroundColor: [
+                            '#dc3545',
+                            '#fd7e14',
+                            '#ffc107',
+                            '#198754'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
