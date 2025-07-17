@@ -8,6 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Toastr Notifications -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         .priority-LOW { background-color: #d1e7dd; }
         .priority-MED { background-color: #fff3cd; }
@@ -32,6 +34,11 @@
         .complaint-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Toastr customization */
+        .toast {
+            opacity: 1 !important;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -99,6 +106,107 @@
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Toastr Notifications -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configure Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-bottom-right",
+            "preventDuplicates": true,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000"
+        };
+
+        // Only connect if user is authenticated
+        {% if request.user.is_authenticated %}
+            let socket;
+            let reconnectAttempts = 0;
+            const maxReconnectAttempts = 5;
+            const reconnectDelay = 3000; // 3 seconds
+            
+            function connectWebSocket() {
+                const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                socket = new WebSocket(
+                    wsScheme + window.location.host + '/ws/notifications/'
+                );
+                
+                socket.onopen = function(e) {
+                    console.log('WebSocket connection established');
+                    reconnectAttempts = 0; // Reset reconnect attempts on successful connection
+                };
+                
+                socket.onmessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    if (data.type === 'notification') {
+                        showNotification(data.message, data.complaint_id);
+                    }
+                };
+                
+                socket.onerror = function(e) {
+                    console.error('WebSocket error:', e);
+                };
+                
+                socket.onclose = function(e) {
+                    console.log('WebSocket connection closed', e);
+                    
+                    // Attempt to reconnect if the closure was unexpected
+                    if (e.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+                        setTimeout(connectWebSocket, reconnectDelay);
+                    }
+                };
+            }
+            
+            // Initial connection
+            connectWebSocket();
+            
+            function showNotification(message, complaintId) {
+                // Use Toastr as primary notification system
+                toastr.options.onclick = function() {
+                    if (complaintId) {
+                        window.location.href = '/complaint/' + complaintId + '/';
+                    }
+                };
+                toastr.info(message);
+                
+                // Fallback to browser notifications if page is not visible
+                if (document.visibilityState !== 'visible' && 'Notification' in window) {
+                    if (Notification.permission === 'granted') {
+                        const notification = new Notification('New Complaint Update', {
+                            body: message,
+                            icon: '/static/favicon.ico'
+                        });
+                        
+                        notification.onclick = function() {
+                            if (complaintId) {
+                                window.location.href = '/complaint/' + complaintId + '/';
+                            }
+                        };
+                    }
+                }
+            }
+            
+            // Request notification permission when user interacts with the page
+            document.addEventListener('click', function requestNotificationPermission() {
+                if ('Notification' in window && Notification.permission !== 'granted') {
+                    Notification.requestPermission().then(permission => {
+                        console.log('Notification permission:', permission);
+                    });
+                }
+                // Remove the event listener after first interaction
+                document.removeEventListener('click', requestNotificationPermission);
+            }, { once: true });
+        {% endif %}
+    });
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,145 +1,142 @@
+# sentiment.py
 import spacy
 from textblob import TextBlob
 import re
 
-# Load spaCy model
 nlp = spacy.load('en_core_web_sm')
 
 class ComplaintAnalyzer:
-    """Analyzes complaint text to determine category, priority, and sentiment"""
-    
-    # Category-related keywords
     CATEGORY_KEYWORDS = {
-        'MAIN': [
-            'broken', 'repair', 'fix', 'maintenance', 'water', 'leak', 'toilet', 'plumbing',
-            'electricity', 'power', 'outage', 'air conditioning', 'heating', 'furniture'
-        ],
-        'SAFE': [
-            'safety', 'danger', 'threat', 'unsafe', 'security', 'attack', 'harassment',
-            'crime', 'assault', 'theft', 'stolen', 'fight', 'weapon', 'emergency', 'fire'
-        ],
-        'CLASS': [
-            'lecture', 'class', 'professor', 'teacher', 'course', 'curriculum', 'exam',
-            'assignment', 'grade', 'classroom', 'schedule', 'syllabus', 'teaching', 'learning'
-        ],
-        'MISD': [
-            'conduct', 'behavior', 'misbehavior', 'misconduct', 'cheat', 'plagiarism',
-            'noise', 'loud', 'disturb', 'alcohol', 'drug', 'bullying', 'violation', 'rule'
-        ]
+        'INFRA': ['building', 'room', 'lecture hall', 'classroom', 'repair', 'maintenance', 
+                 'leak', 'electric', 'power', 'water', 'plumbing', 'furniture', 'facility',
+                 'infrastructure', 'broken', 'damaged', 'faulty'],
+        'HOSTEL': ['hostel', 'dorm', 'dormitory', 'roommate', 'bathroom', 'common room', 
+                  'laundry', 'residence', 'accommodation', 'room allocation'],
+        'SAFETY': ['safety', 'danger', 'unsafe', 'threat', 'emergency', 'fire', 'accident',
+                  'security', 'theft', 'stolen', 'missing', 'violence'],
+        'HARASS': ['harassment', 'bully', 'bullying', 'sexual', 'abuse', 'stalking',
+                  'discrimination', 'intimidation', 'unwelcome'],
+        'ACAD': ['lecturer', 'professor', 'teacher', 'instructor', 'course', 'class', 'exam', 
+                'examination', 'test', 'grade', 'grading', 'assignment', 'marking', 'score', 
+                'result', 'department', 'academic', 'curriculum', 'syllabus', 'lecture',
+                'tutorial', 'seminar', 'attendance', 'timetable', 'schedule']
     }
     
-    # Urgency-related keywords
-    URGENCY_KEYWORDS = {
+    PRIORITY_KEYWORDS = {
+        'CRIT': ['urgent', 'emergency', 'danger', 'immediately', 'now', 'critical', 
+                'asap', 'crisis', 'desperate', 'severe'],
+        'HIGH': ['important', 'soon', 'quickly', 'serious', 'concerned', 'worried',
+                'significant', 'major', 'pressing', 'vital'],
+        'MED': ['problem', 'issue', 'request', 'please', 'kindly', 'help',
+               'concern', 'matter', 'situation']
+    }
+    
+    # Time-sensitive patterns for academic complaints
+    TIME_PATTERNS = {
         'CRIT': [
-            'urgent', 'immediately', 'emergency', 'critical', 'serious', 'severe',
-            'dangerous', 'life-threatening', 'violence', 'assault', 'attack', 'now'
+            r'\b(tomorrow|today|this week)\b.*\b(exam|test|assessment)\b',
+            r'\b(exam|test|assessment)\b.*\b(tomorrow|today|this week)\b',
+            r'\b(few days?|couple of days?)\b.*\b(exam|test)\b',
+            r'\b(exam|test)\b.*\b(few days?|couple of days?)\b'
         ],
         'HIGH': [
-            'important', 'soon', 'quickly', 'unsafe', 'concerning', 'worried', 'escalate'
-        ],
-        'MED': [
-            'attention', 'issue', 'problem', 'concern', 'address', 'resolve'
+            r'\b(next week|1 week|one week|2 weeks?|two weeks?|3 weeks?|three weeks?)\b.*\b(exam|test|assessment)\b',
+            r'\b(exam|test|assessment)\b.*\b(next week|1 week|one week|2 weeks?|two weeks?|3 weeks?|three weeks?)\b',
+            r'\bhaven\'?t had.*\b(test|exam|assessment)\b.*\b(weeks?|days?)\b.*\b(exam|test)\b'
         ]
     }
     
-    # Staff assignment based on category
-    CATEGORY_TO_STAFF = {
-        'MAIN': ['WD'],  # Works Department
-        'SAFE': ['SEC', 'SA'],  # Security Officer, Student Affairs
-        'CLASS': ['SA', 'REG'],  # Student Affairs, Registrar
-        'MISD': ['SA', 'HW']  # Student Affairs, Hall Warden
+    # Academic urgency indicators
+    ACADEMIC_URGENCY = {
+        'HIGH': ['not coming to class', 'hasn\'t been coming', 'missing lectures', 
+                'no test', 'haven\'t had test', 'no assessment', 'weeks to exam',
+                'approaching exam', 'exam period', 'final exam'],
+        'MED': ['irregular attendance', 'sometimes absent', 'delayed syllabus',
+               'behind schedule', 'slow progress']
     }
     
-    def __init__(self):
-        pass
-        
-    def analyze(self, complaint_text, title=None):
-        """
-        Analyze the complaint text to determine category, priority, and sentiment
-        Returns a dictionary with analysis results
-        """
-        # Combine title and text for better analysis if title is provided
-        full_text = f"{title}. {complaint_text}" if title else complaint_text
-        
-        # Get sentiment score using TextBlob
-        blob = TextBlob(full_text)
-        sentiment_score = blob.sentiment.polarity
-        
-        # Process with spaCy for entity and keyword recognition
+    def analyze(self, text, title=None):
+        full_text = f"{title}. {text}" if title else text
         doc = nlp(full_text.lower())
+        blob = TextBlob(full_text)
         
-        # Determine category based on keyword matching
-        category = self._determine_category(doc)
+        # Determine category
+        category_scores = {cat: 0 for cat in self.CATEGORY_KEYWORDS}
         
-        # Determine priority based on keywords and sentiment
-        priority = self._determine_priority(doc, sentiment_score)
+        # Score based on keyword matches
+        for token in doc:
+            for cat, keywords in self.CATEGORY_KEYWORDS.items():
+                if token.text in keywords:
+                    category_scores[cat] += 1
         
-        # Determine which staff roles should be assigned
-        assigned_roles = self._determine_staff_assignment(category, priority)
+        # Check for phrase matches (more accurate for academic complaints)
+        full_text_lower = full_text.lower()
+        for cat, keywords in self.CATEGORY_KEYWORDS.items():
+            for keyword in keywords:
+                if keyword in full_text_lower:
+                    category_scores[cat] += 1
+        
+        category = max(category_scores, key=category_scores.get)
+        
+        # Determine base priority from keywords
+        priority = 'LOW'
+        for token in doc:
+            for pri, keywords in self.PRIORITY_KEYWORDS.items():
+                if token.text in keywords:
+                    if pri == 'CRIT':
+                        priority = 'CRIT'
+                        break
+                    elif pri == 'HIGH' and priority != 'CRIT':
+                        priority = 'HIGH'
+                    elif pri == 'MED' and priority not in ['CRIT', 'HIGH']:
+                        priority = 'MED'
+        
+        # Enhanced priority determination for academic complaints
+        if category == 'ACAD':
+            priority = self._determine_academic_priority(full_text_lower, priority)
+        
+        # Adjust priority based on sentiment (more nuanced)
+        sentiment = blob.sentiment.polarity
+        if sentiment <= -0.4 and priority not in ['CRIT']:
+            if category == 'ACAD' and any(phrase in full_text_lower for phrase in ['exam', 'test', 'assessment']):
+                priority = 'HIGH'
+            elif priority not in ['HIGH']:
+                priority = 'HIGH'
+        elif sentiment <= -0.15 and priority not in ['CRIT', 'HIGH']:
+            priority = 'MED'
         
         return {
             'category': category,
             'priority': priority,
-            'sentiment_score': sentiment_score,
-            'assigned_roles': assigned_roles
+            'sentiment_score': sentiment
         }
     
-    def _determine_category(self, doc):
-        """Determine the complaint category based on keywords"""
-        # Count occurrences of keywords for each category
-        category_scores = {category: 0 for category in self.CATEGORY_KEYWORDS}
+    def _determine_academic_priority(self, text, current_priority):
+        """Enhanced priority determination for academic complaints"""
         
-        text = doc.text.lower()
-        for category, keywords in self.CATEGORY_KEYWORDS.items():
-            for keyword in keywords:
-                if keyword.lower() in text:
-                    category_scores[category] += 1
+        # Check time-sensitive patterns
+        for priority_level, patterns in self.TIME_PATTERNS.items():
+            for pattern in patterns:
+                if re.search(pattern, text, re.IGNORECASE):
+                    if priority_level == 'CRIT':
+                        return 'CRIT'
+                    elif priority_level == 'HIGH' and current_priority not in ['CRIT']:
+                        current_priority = 'HIGH'
         
-        # If no clear category is found, default to Misdemeanor Issues
-        if max(category_scores.values(), default=0) == 0:
-            return 'MISD'
+        # Check academic urgency indicators
+        for priority_level, phrases in self.ACADEMIC_URGENCY.items():
+            for phrase in phrases:
+                if phrase in text:
+                    if priority_level == 'HIGH' and current_priority not in ['CRIT']:
+                        current_priority = 'HIGH'
+                    elif priority_level == 'MED' and current_priority not in ['CRIT', 'HIGH']:
+                        current_priority = 'MED'
         
-        # Return the category with the highest score
-        return max(category_scores, key=category_scores.get)
-    
-    def _determine_priority(self, doc, sentiment_score):
-        """Determine priority based on urgency keywords and sentiment"""
-        text = doc.text.lower()
+        # Special case: lecturer absence + upcoming exam
+        if (any(phrase in text for phrase in ['not coming', 'hasn\'t been coming', 'not been coming']) and 
+            any(phrase in text for phrase in ['exam', 'test', 'assessment']) and
+            any(phrase in text for phrase in ['weeks', 'days'])):
+            if current_priority not in ['CRIT']:
+                current_priority = 'HIGH'
         
-        # Check for critical urgency keywords first
-        for keyword in self.URGENCY_KEYWORDS['CRIT']:
-            if keyword.lower() in text:
-                return 'CRIT'
-        
-        # Check for high urgency keywords
-        for keyword in self.URGENCY_KEYWORDS['HIGH']:
-            if keyword.lower() in text:
-                return 'HIGH'
-        
-        # Check for medium urgency keywords
-        for keyword in self.URGENCY_KEYWORDS['MED']:
-            if keyword.lower() in text:
-                return 'MED'
-        
-        # If no keywords match, use sentiment score
-        # More negative sentiment = higher priority
-        if sentiment_score < -0.5:
-            return 'HIGH'
-        elif sentiment_score < -0.2:
-            return 'MED'
-        else:
-            return 'LOW'
-    
-    def _determine_staff_assignment(self, category, priority):
-        """Determine which staff roles should be assigned to the complaint"""
-        assigned_roles = self.CATEGORY_TO_STAFF.get(category, ['SA'])  # Default to Student Affairs
-        
-        # Critical cases are also assigned to VC and Registrar
-        if priority == 'CRIT':
-            assigned_roles = list(set(assigned_roles + ['VC', 'REG']))
-            
-        # High priority cases are assigned to Registrar
-        elif priority == 'HIGH':
-            assigned_roles = list(set(assigned_roles + ['REG']))
-            
-        return assigned_roles
+        return current_priority

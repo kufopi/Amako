@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'complaints',
+    'channels',
+    
+    
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
@@ -71,6 +75,18 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'complaint_system.wsgi.application'
+
+# ASGI application for handling WebSocket connections
+ASGI_APPLICATION = 'complaint_system.asgi.application'
+
+# Channel layer configuration (using Redis as backend)
+# In your settings.py file, typically near other channel/redis configurations
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 
 # Database
@@ -129,9 +145,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'login'
+LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = '/login/'
 
 # For displaying messages
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'

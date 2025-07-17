@@ -1,223 +1,361 @@
 {% extends 'base.html' %}
-{% load static %}
 
-{% block title %}Staff Dashboard - {{ staff.get_role_display }}{% endblock %}
+{% block extra_css %}
+<style>
+    .badge.bg-critical { background-color: #dc3545 !important; }
+    .badge.bg-high { background-color: #fd7e14 !important; }
+    .badge.bg-medium { background-color: #ffc107 !important; color: #000; }
+    .badge.bg-low { background-color: #28a745 !important; }
+    
+    .badge.bg-pending { background-color: #6c757d !important; }
+    .badge.bg-review { background-color: #17a2b8 !important; }
+    .badge.bg-assigned { background-color: #007bff !important; }
+    .badge.bg-progress { background-color: #ffc107 !important; color: #000; }
+    .badge.bg-resolved { background-color: #28a745 !important; }
+    
+    .table-danger { background-color: rgba(220, 53, 69, 0.1) !important; }
+    .table-warning { background-color: rgba(255, 193, 7, 0.1) !important; }
+    
+    .stats-card {
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2">
-            <div class="sidebar p-3">
-                <div class="d-flex align-items-center mb-4">
-                    <i class="fas fa-user-shield fs-1 me-3 text-primary"></i>
-                    <div>
-                        <h5 class="mb-0">{{ staff.user.get_full_name }}</h5>
-                        <p class="text-muted mb-0">{{ staff.get_role_display }}</p>
-                    </div>
-                </div>
-                
-                <div class="mb-4">
-                    <h6 class="sidebar-heading text-muted">FILTERS</h6>
-                    <div class="list-group">
-                        <a href="?priority=CRIT" class="list-group-item list-group-item-action">
-                            <span class="badge bg-danger me-2">!</span> Critical
-                        </a>
-                        <a href="?priority=HIGH" class="list-group-item list-group-item-action">
-                            <span class="badge bg-warning me-2">!</span> High Priority
-                        </a>
-                        <a href="?status=PEND" class="list-group-item list-group-item-action">
-                            <span class="badge bg-secondary me-2">P</span> Pending
-                        </a>
-                        <a href="?" class="list-group-item list-group-item-action">
-                            <i class="fas fa-sync-alt me-2"></i> Reset Filters
-                        </a>
-                    </div>
-                </div>
-                
-                <div>
-                    <h6 class="sidebar-heading text-muted">CATEGORIES</h6>
-                    <div class="list-group">
-                        <a href="?category=MAIN" class="list-group-item list-group-item-action">
-                            <i class="fas fa-tools me-2"></i> Maintenance
-                        </a>
-                        <a href="?category=SAFE" class="list-group-item list-group-item-action">
-                            <i class="fas fa-shield-alt me-2"></i> Safety
-                        </a>
-                        <a href="?category=CLASS" class="list-group-item list-group-item-action">
-                            <i class="fas fa-chalkboard-teacher me-2"></i> Classroom
-                        </a>
-                        <a href="?category=MISD" class="list-group-item list-group-item-action">
-                            <i class="fas fa-exclamation-triangle me-2"></i> Misdemeanor
-                        </a>
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar me-3">
+                            <i class="fas fa-user-tie fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0">{{ staff.get_role_display }} Dashboard</h4>
+                            <p class="text-muted mb-0">Welcome, {{ staff.user.get_full_name }}</p>
+                            {% if staff.department %}
+                            <small class="text-muted">{{ staff.department.name }}</small>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Staff Dashboard</h1>
-                <div class="d-flex">
-                    <div class="dropdown me-2">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
-                            <i class="fas fa-sort"></i> Sort
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                            <li><a class="dropdown-item" href="?sort=priority">By Priority</a></li>
-                            <li><a class="dropdown-item" href="?sort=date">By Date</a></li>
-                            <li><a class="dropdown-item" href="?sort=status">By Status</a></li>
-                        </ul>
-                    </div>
-                    <form class="d-flex">
-                        <input class="form-control me-2" type="search" placeholder="Search complaints" name="search">
-                        <button class="btn btn-outline-primary" type="submit">Search</button>
-                    </form>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ stats.total_assigned }}</h5>
+                    <p class="card-text small">Assigned to Me</p>
                 </div>
             </div>
-            
-            <!-- Stats Cards -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6">
-                    <div class="card text-white bg-danger mb-3">
-                        <div class="card-body d-flex align-items-center">
-                            <i class="fas fa-exclamation-circle fa-3x me-3"></i>
-                            <div>
-                                <h5 class="card-title">{{ critical_count }}</h5>
-                                <p class="card-text">Critical Issues</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card text-white bg-warning mb-3">
-                        <div class="card-body d-flex align-items-center">
-                            <i class="fas fa-clock fa-3x me-3"></i>
-                            <div>
-                                <h5 class="card-title">{{ pending_count }}</h5>
-                                <p class="card-text">Pending Cases</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card text-white bg-success mb-3">
-                        <div class="card-body d-flex align-items-center">
-                            <i class="fas fa-check-circle fa-3x me-3"></i>
-                            <div>
-                                <h5 class="card-title">{{ resolved_count }}</h5>
-                                <p class="card-text">Resolved Today</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card text-white bg-info mb-3">
-                        <div class="card-body d-flex align-items-center">
-                            <i class="fas fa-chart-line fa-3x me-3"></i>
-                            <div>
-                                <h5 class="card-title">{{ total_count }}</h5>
-                                <p class="card-text">Total Assigned</p>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">{{ stats.total_tracking }}</h5>
+                    <p class="card-text small">Tracking</p>
                 </div>
             </div>
-            
-            <!-- Complaints Table -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">{{ page_obj.paginator.count }} Complaints</h5>
+        </div>
+        {% if is_hod %}
+        <div class="col-md-2">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ stats.total_department }}</h5>
+                    <p class="card-text small">Department</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="col-md-2">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">{{ stats.pending_count }}</h5>
+                    <p class="card-text small">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">{{ stats.critical_count }}</h5>
+                    <p class="card-text small">Critical</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary">{{ stats.in_progress_count }}</h5>
+                    <p class="card-text small">In Progress</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Filters</h5>
                 </div>
                 <div class="card-body">
-                    {% if page_obj %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Title</th>
-                                        <th>Student</th>
-                                        <th>Category</th>
-                                        <th>Priority</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for complaint in page_obj %}
-                                        <tr class="{% if complaint.is_critical %}table-danger{% endif %}">
-                                            <td>{{ complaint.id }}</td>
-                                            <td>{{ complaint.title }}</td>
-                                            <td>{{ complaint.student.user.get_full_name }}</td>
-                                            <td>{{ complaint.get_category_display }}</td>
-                                            <td>
-                                                <span class="badge priority-{{ complaint.priority }}">
-                                                    {{ complaint.get_priority_display }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge status-{{ complaint.status }}">
-                                                    {{ complaint.get_status_display }}
-                                                </span>
-                                            </td>
-                                            <td>{{ complaint.created_at|date:"M d, Y" }}</td>
-                                            <td>
-                                                <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-eye"></i> View
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Pagination -->
-                        {% if page_obj.has_other_pages %}
-                            <nav aria-label="Pagination" class="mt-4">
-                                <ul class="pagination justify-content-center">
-                                    {% if page_obj.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                                                <span aria-hidden="true">&laquo;</span>
-                                            </a>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item disabled">
-                                            <span class="page-link">&laquo;</span>
-                                        </li>
-                                    {% endif %}
-                                    
-                                    {% for i in page_obj.paginator.page_range %}
-                                        {% if page_obj.number == i %}
-                                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                                        {% else %}
-                                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-                                        {% endif %}
-                                    {% endfor %}
-                                    
-                                    {% if page_obj.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                                                <span aria-hidden="true">&raquo;</span>
-                                            </a>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item disabled">
-                                            <span class="page-link">&raquo;</span>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'staff_dashboard' %}" class="list-group-item list-group-item-action {% if not request.GET %}active{% endif %}">
+                            <i class="fas fa-list me-2"></i>All Complaints
+                            <span class="badge bg-secondary float-end">{{ stats.total_assigned|add:stats.total_tracking }}</span>
+                        </a>
+                        <a href="?status=PEND" class="list-group-item list-group-item-action {% if request.GET.status == 'PEND' %}active{% endif %}">
+                            <i class="fas fa-clock me-2"></i>Pending
+                            <span class="badge bg-warning float-end">{{ stats.pending_count }}</span>
+                        </a>
+                        <a href="?status=PROG" class="list-group-item list-group-item-action {% if request.GET.status == 'PROG' %}active{% endif %}">
+                            <i class="fas fa-cog me-2"></i>In Progress
+                            <span class="badge bg-info float-end">{{ stats.in_progress_count }}</span>
+                        </a>
+                        <a href="?priority=CRIT" class="list-group-item list-group-item-action {% if request.GET.priority == 'CRIT' %}active{% endif %}">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Critical
+                            <span class="badge bg-danger float-end">{{ stats.critical_count }}</span>
+                        </a>
+                        <a href="?priority=HIGH" class="list-group-item list-group-item-action {% if request.GET.priority == 'HIGH' %}active{% endif %}">
+                            <i class="fas fa-exclamation me-2"></i>High Priority
+                            <span class="badge bg-warning float-end">{{ stats.high_priority_count }}</span>
+                        </a>
+                        <a href="?assignment=assigned_to_me" class="list-group-item list-group-item-action {% if request.GET.assignment == 'assigned_to_me' %}active{% endif %}">
+                            <i class="fas fa-user-check me-2"></i>Assigned to Me
+                            <span class="badge bg-primary float-end">{{ stats.total_assigned }}</span>
+                        </a>
+                        <a href="?assignment=tracking" class="list-group-item list-group-item-action {% if request.GET.assignment == 'tracking' %}active{% endif %}">
+                            <i class="fas fa-eye me-2"></i>Tracking
+                            <span class="badge bg-info float-end">{{ stats.total_tracking }}</span>
+                        </a>
+                        {% if is_hod %}
+                        <a href="?category=ACAD" class="list-group-item list-group-item-action {% if request.GET.category == 'ACAD' %}active{% endif %}">
+                            <i class="fas fa-graduation-cap me-2"></i>Academic
+                            <span class="badge bg-success float-end">{{ stats.academic_complaints }}</span>
+                        </a>
                         {% endif %}
-                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- Role-specific quick actions -->
+            {% if is_wd %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Works Department</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'works_dashboard' %}" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-tools me-1"></i>Works Dashboard
+                    </a>
+                    <a href="?category=INFRA" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-building me-1"></i>Infrastructure
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        Complaints 
+                        {% if request.GET.status %}
+                            - {{ request.GET.status|title }}
+                        {% elif request.GET.priority %}
+                            - {{ request.GET.priority|title }} Priority
+                        {% elif request.GET.category %}
+                            - {{ request.GET.category|title }}
+                        {% elif request.GET.assignment %}
+                            - {% if request.GET.assignment == 'assigned_to_me' %}Assigned to Me{% else %}Tracking{% endif %}
+                        {% endif %}
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-filter me-1"></i>More Filters
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><h6 class="dropdown-header">By Status</h6></li>
+                            <li><a class="dropdown-item" href="?status=PEND">Pending</a></li>
+                            <li><a class="dropdown-item" href="?status=REVW">Under Review</a></li>
+                            <li><a class="dropdown-item" href="?status=ASSG">Assigned</a></li>
+                            <li><a class="dropdown-item" href="?status=PROG">In Progress</a></li>
+                            <li><a class="dropdown-item" href="?status=RESV">Resolved</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">By Category</h6></li>
+                            <li><a class="dropdown-item" href="?category=ACAD">Academic</a></li>
+                            <li><a class="dropdown-item" href="?category=INFRA">Infrastructure</a></li>
+                            <li><a class="dropdown-item" href="?category=HOSTEL">Hostel</a></li>
+                            <li><a class="dropdown-item" href="?category=SAFETY">Safety</a></li>
+                            <li><a class="dropdown-item" href="?category=HARASS">Harassment</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'staff_dashboard' %}">Clear Filters</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if page_obj %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Student</th>
+                                    <th>Department</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for complaint in page_obj %}
+                                <tr class="{% if complaint.priority == 'CRIT' %}table-danger{% elif complaint.priority == 'HIGH' %}table-warning{% endif %}">
+                                    <td>
+                                        <strong>#{{ complaint.id }}</strong>
+                                        {% if complaint.assigned_to == staff %}
+                                            <i class="fas fa-user-check text-primary ms-1" title="Assigned to you"></i>
+                                        {% endif %}
+                                        {% if staff in complaint.trackers.all %}
+                                            <i class="fas fa-eye text-info ms-1" title="You're tracking this"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ complaint.title|truncatechars:30 }}</div>
+                                        {% if complaint.location %}
+                                        <small class="text-muted">📍 {{ complaint.location|truncatechars:25 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div>{{ complaint.student.user.get_full_name }}</div>
+                                        <small class="text-muted">{{ complaint.student.student_id }}</small>
+                                    </td>
+                                    <td>
+                                        {% if complaint.student.department %}
+                                            {{ complaint.student.department.name|truncatechars:15 }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ complaint.get_category_display }}</span>
+                                    </td>
+                                    <td>
+                                        {% if complaint.priority == 'CRIT' %}
+                                            <span class="badge bg-critical">{{ complaint.get_priority_display }}</span>
+                                        {% elif complaint.priority == 'HIGH' %}
+                                            <span class="badge bg-high">{{ complaint.get_priority_display }}</span>
+                                        {% elif complaint.priority == 'MED' %}
+                                            <span class="badge bg-medium">{{ complaint.get_priority_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-low">{{ complaint.get_priority_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if complaint.status == 'PEND' %}
+                                            <span class="badge bg-pending">{{ complaint.get_status_display }}</span>
+                                        {% elif complaint.status == 'REVW' %}
+                                            <span class="badge bg-review">{{ complaint.get_status_display }}</span>
+                                        {% elif complaint.status == 'ASSG' %}
+                                            <span class="badge bg-assigned">{{ complaint.get_status_display }}</span>
+                                        {% elif complaint.status == 'PROG' %}
+                                            <span class="badge bg-progress">{{ complaint.get_status_display }}</span>
+                                        {% elif complaint.status == 'RESV' %}
+                                            <span class="badge bg-resolved">{{ complaint.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ complaint.created_at|date:"M d, Y" }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ complaint.created_at|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'complaint_tracking' complaint.id %}" class="btn btn-info" title="Track Progress">
+                                                <i class="fas fa-chart-line"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Complaints pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.priority %}priority={{ request.GET.priority }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.assignment %}assignment={{ request.GET.assignment }}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.priority %}priority={{ request.GET.priority }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.assignment %}assignment={{ request.GET.assignment }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.priority %}priority={{ request.GET.priority }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.assignment %}assignment={{ request.GET.assignment }}&{% endif %}page={{ page_obj.next_page_number }}">Next &raquo;</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
                     {% else %}
-                        <div class="alert alert-info">
-                            No complaints have been assigned to you yet.
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <div>
+                            <strong>No complaints found</strong><br>
+                            {% if request.GET %}
+                                No complaints match your current filters. <a href="{% url 'staff_dashboard' %}">Clear filters</a> to see all complaints.
+                            {% else %}
+                                You don't have any complaints assigned or tracked yet.
+                            {% endif %}
                         </div>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -227,35 +365,19 @@
 
 {% block extra_js %}
 <script>
-    // Chart.js visualization of complaint priorities
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('priorityChart');
-        if (ctx) {
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Critical', 'High', 'Medium', 'Low'],
-                    datasets: [{
-                        data: [{{ critical_count }}, {{ high_count }}, {{ medium_count }}, {{ low_count }}],
-                        backgroundColor: [
-                            '#dc3545',
-                            '#fd7e14',
-                            '#ffc107',
-                            '#198754'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
+// Auto-refresh every 30 seconds for real-time updates
+setTimeout(function() {
+    location.reload();
+}, 30000);
+
+// Add tooltip initialization if using Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+});
 </script>
 {% endblock %}
+
 {% endblock %}

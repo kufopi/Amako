@@ -1,151 +1,261 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2">
-            <div class="sidebar p-3">
-                <div class="d-flex align-items-center mb-4">
-                    <i class="fas fa-user-graduate fs-1 me-3 text-primary"></i>
-                    <div>
-                        <h5 class="mb-0">{{ student.user.get_full_name }}</h5>
-                        <p class="text-muted mb-0">{{ student.student_id }}</p>
-                        <p class="text-muted mb-0">{{ student.department }}</p>
-                    </div>
+        <div class="col-md-3 col-lg-2 sidebar">
+            <div class="d-flex align-items-center mb-4 p-3">
+                <div class="avatar me-3">
+                    <i class="fas fa-user-graduate fa-2x"></i>
                 </div>
-                
-                <div class="mb-4">
-                    <h6 class="sidebar-heading text-muted">COMPLAINT STATUS</h6>
-                    <div class="list-group">
-                        <a href="?status=PEND" class="list-group-item list-group-item-action">
-                            <span class="badge bg-secondary me-2">P</span> Pending
-                        </a>
-                        <a href="?status=REVW" class="list-group-item list-group-item-action">
-                            <span class="badge bg-info me-2">R</span> Under Review
-                        </a>
-                        <a href="?status=ASSG" class="list-group-item list-group-item-action">
-                            <span class="badge bg-primary me-2">A</span> Assigned
-                        </a>
-                        <a href="?status=RESV" class="list-group-item list-group-item-action">
-                            <span class="badge bg-success me-2">R</span> Resolved
-                        </a>
-                        <a href="?status=CLSD" class="list-group-item list-group-item-action">
-                            <span class="badge bg-dark me-2">C</span> Closed
-                        </a>
-                        <a href="?" class="list-group-item list-group-item-action">
-                            <i class="fas fa-sync-alt me-2"></i> All Complaints
-                        </a>
-                    </div>
+                <div>
+                    <h5 class="mb-0">{{ student.user.get_full_name }}</h5>
+                    <p class="text-muted mb-0">{{ student.student_id }}</p>
+                    <p class="text-muted">{{ student.department.name }}</p>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Student Dashboard</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newComplaintModal">
-                    <i class="fas fa-plus"></i> New Complaint
-                </button>
             </div>
             
-            <!-- Complaints List -->
+           <div class="mb-4">
+                <h6 class="sidebar-header">FILTER COMPLAINTS</h6>
+                <div class="list-group">
+                    <a href="?status=PEND" class="list-group-item list-group-item-action {% if current_filters.status == 'PEND' %}active{% endif %}">
+                        <i class="fas fa-clock me-2"></i> Pending
+                        <span class="badge bg-secondary float-end">{{ stats.pending_count }}</span>
+                    </a>
+                    <a href="?status=REVW,ASSG,PROG" class="list-group-item list-group-item-action {% if current_filters.status == 'REVW,ASSG,PROG' %}active{% endif %}">
+                        <i class="fas fa-spinner me-2"></i> In Progress
+                        <span class="badge bg-warning float-end">{{ stats.in_progress_count }}</span>
+                    </a>
+                    <a href="?status=RESV" class="list-group-item list-group-item-action {% if current_filters.status == 'RESV' %}active{% endif %}">
+                        <i class="fas fa-check-circle me-2"></i> Resolved
+                        <span class="badge bg-success float-end">{{ stats.resolved_count }}</span>
+                    </a>
+                    <a href="?status=CLSD" class="list-group-item list-group-item-action {% if current_filters.status == 'CLSD' %}active{% endif %}">
+                        <i class="fas fa-times-circle me-2"></i> Closed
+                        <span class="badge bg-secondary float-end">{{ stats.closed_count }}</span>
+                    </a>
+                    <a href="?priority=CRIT" class="list-group-item list-group-item-action {% if current_filters.priority == 'CRIT' %}active{% endif %}">
+                        <i class="fas fa-exclamation-triangle me-2 text-danger"></i> Critical Priority
+                        <span class="badge bg-danger float-end">{{ stats.critical_count }}</span>
+                    </a>
+                    <a href="?" class="list-group-item list-group-item-action {% if not current_filters.status and not current_filters.priority and not current_filters.category %}active{% endif %}">
+                        <i class="fas fa-list me-2"></i> All Complaints
+                        <span class="badge bg-primary float-end">{{ stats.total_count }}</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Category Filters -->
+            <div class="mb-4">
+                <h6 class="sidebar-header">BY CATEGORY</h6>
+                <div class="list-group">
+                    <a href="?category=INFRA" class="list-group-item list-group-item-action {% if current_filters.category == 'INFRA' %}active{% endif %}">
+                        <i class="fas fa-tools me-2"></i> Infrastructure
+                    </a>
+                    <a href="?category=HOSTEL" class="list-group-item list-group-item-action {% if current_filters.category == 'HOSTEL' %}active{% endif %}">
+                        <i class="fas fa-bed me-2"></i> Hostel
+                    </a>
+                    <a href="?category=SAFETY" class="list-group-item list-group-item-action {% if current_filters.category == 'SAFETY' %}active{% endif %}">
+                        <i class="fas fa-shield-alt me-2"></i> Safety
+                    </a>
+                    <a href="?category=HARASS" class="list-group-item list-group-item-action {% if current_filters.category == 'HARASS' %}active{% endif %}">
+                        <i class="fas fa-user-shield me-2"></i> Harassment
+                    </a>
+                    <a href="?category=ACAD" class="list-group-item list-group-item-action {% if current_filters.category == 'ACAD' %}active{% endif %}">
+                        <i class="fas fa-graduation-cap me-2"></i> Academic
+                    </a>
+                </div>
+            </div>
+
+            <style>
+                .list-group-item.active {
+                    background-color: #0d6efd;
+                    border-color: #0d6efd;
+                    color: white;
+                }
+                
+                .list-group-item.active .badge {
+                    background-color: rgba(255, 255, 255, 0.2) !important;
+                    color: white !important;
+                }
+            </style>
+            
+            <a href="{% url 'submit_complaint' %}" class="btn btn-primary w-100">
+                <i class="fas fa-plus me-2"></i> New Complaint
+            </a>
+        </div>
+        
+        <div class="col-md-9 col-lg-10 main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>My Complaints</h1>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-sort me-1"></i> Sort
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="?sort=newest">Newest First</a></li>
+                        <li><a class="dropdown-item" href="?sort=oldest">Oldest First</a></li>
+                        <li><a class="dropdown-item" href="?sort=priority">By Priority</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            {% if page_obj %}
             <div class="row">
-                {% if complaints %}
-                    {% for complaint in complaints %}
-                        <div class="col-lg-6 mb-4">
-                            <div class="card complaint-card shadow-sm h-100">
-                                <div class="card-header d-flex justify-content-between align-items-center 
-                                            status-{{ complaint.status }}">
-                                    <h5 class="card-title mb-0">{{ complaint.title }}</h5>
-                                    <span class="badge priority-{{ complaint.priority }}">
-                                        {{ complaint.get_priority_display }}
-                                    </span>
-                                </div>
-                                <div class="card-body">
-                                    <p class="card-text text-truncate">{{ complaint.description }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">
-                                            <i class="fas fa-calendar-alt"></i> {{ complaint.created_at|date:"M d, Y" }}
-                                        </small>
-                                        <span class="badge bg-info">{{ complaint.get_category_display }}</span>
-                                    </div>
-                                </div>
-                                <div class="card-footer d-flex justify-content-between">
-                                    <span class="badge status-{{ complaint.status }}">
-                                        {{ complaint.get_status_display }}
-                                    </span>
-                                    <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-eye"></i> View Details
-                                    </a>
+                {% for complaint in page_obj %}
+                <div class="col-md-6 mb-4">
+                    <div class="card complaint-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center 
+                                    status-{{ complaint.status }}">
+                            <h5 class="card-title mb-0">{{ complaint.title|truncatechars:30 }}</h5>
+                            <span class="badge bg-{{ complaint.get_priority_display|lower }}">
+                                {{ complaint.get_priority_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ complaint.description|truncatewords:20 }}</p>
+                            
+                            {% if complaint.comments.exists %}
+                            <div class="latest-update mt-3">
+                                <h6 class="text-muted mb-2">Latest Update:</h6>
+                                <div class="update-content">
+                                    <p class="small mb-1">
+                                        <strong>{{ complaint.comments.last.author.user.get_full_name }}</strong>
+                                        <span class="text-muted ms-2">
+                                            {{ complaint.comments.last.created_at|timesince }} ago
+                                        </span>
+                                    </p>
+                                    <p class="small mb-0 text-truncate">
+                                        {{ complaint.comments.last.content }}
+                                    </p>
                                 </div>
                             </div>
+                            {% endif %}
+                            
+                            <div class="complaint-meta mt-3">
+                                <span class="badge bg-secondary">
+                                    {{ complaint.get_category_display }}
+                                </span>
+                                <small class="text-muted float-end">
+                                    {{ complaint.created_at|date:"M d, Y" }}
+                                </small>
+                            </div>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i> You haven't submitted any complaints yet.
+                        <div class="card-footer">
+                            <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-primary">
+                                View Details
+                            </a>
+                            <a href="{% url 'complaint_tracking' complaint.id %}" class="btn btn-sm btn-info ms-2"> {# Added tracking button #}
+                                Track
+                            </a>
+                            <span class="badge float-end status-{{ complaint.status }}">
+                                {{ complaint.get_status_display }}
+                            </span>
                         </div>
                     </div>
-                {% endif %}
+                </div>
+                {% endfor %}
             </div>
+            
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                You haven't submitted any complaints yet.
+                <a href="{% url 'submit_complaint' %}" class="alert-link">Submit your first complaint</a>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- New Complaint Modal -->
-<div class="modal fade" id="newComplaintModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Submit a New Complaint</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i> Your complaint will be automatically analyzed and directed to the appropriate staff.
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
-                        {{ form.title }}
-                        {% if form.title.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.title.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
-                        {{ form.description }}
-                        {% if form.description.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.description.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">
-                            Please provide as much detail as possible to help us address your complaint efficiently.
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Complaint</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<style>
+    .sidebar {
+        background-color: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+    
+    .sidebar-header {
+        color: #6c757d;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        padding: 0.5rem 1rem;
+        margin-bottom: 0;
+    }
+    
+    .complaint-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.125);
+    }
+    
+    .complaint-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .status-PEND { background-color: #6c757d; color: white; }
+    .status-REVW { background-color: #0dcaf0; color: white; }
+    .status-ASSG { background-color: #0d6efd; color: white; }
+    .status-PROG { background-color: #ffc107; color: black; }
+    .status-RESV { background-color: #198754; color: white; }
+    .status-CLSD { background-color: #212529; color: white; }
+    
+    .bg-low { background-color: #d1e7dd; color: #0f5132; }
+    .bg-med { background-color: #fff3cd; color: #664d03; }
+    .bg-high { background-color: #f8d7da; color: #842029; }
+    .bg-crit { background-color: #dc3545; color: white; }
+    
+    .latest-update {
+        border-top: 1px solid #dee2e6;
+        padding-top: 0.75rem;
+    }
+    
+    .update-content {
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+    }
+</style>
 {% endblock %}

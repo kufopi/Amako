@@ -1,230 +1,464 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Complaint Details{% endblock %}
+{% block title %}Complaint #{{ complaint.id }} - {{ complaint.title }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Complaint #{{ complaint.id }}</li>
-                </ol>
-            </nav>
-            <h1>{{ complaint.title }}</h1>
-        </div>
-        <div class="col-md-4 text-end">
-            {% if is_staff %}
-                <form method="post" class="d-inline">
-                    {% csrf_token %}
-                    <input type="hidden" name="update_status" value="1">
-                    <div class="input-group">
-                        {{ status_form.status }}
-                        <button type="submit" class="btn btn-primary">Update Status</button>
-                    </div>
-                </form>
-            {% endif %}
-        </div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Complaint #{{ complaint.id }}</li>
+            </ol>
+        </nav>
+        
+        {% if is_staff %}
+        <form method="post" class="d-flex align-items-center">
+            {% csrf_token %}
+            <input type="hidden" name="update_status" value="1">
+            <div class="input-group" style="width: 250px;">
+                {{ status_form.status }}
+                <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+        </form>
+        {% endif %}
     </div>
 
-    <div class="row">
-        <!-- Complaint Details -->
+    <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Complaint Details</h5>
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <h2 class="h5 mb-0">{{ complaint.title }}</h2>
                     <div>
-                        <span class="badge priority-{{ complaint.priority }} me-2">
+                        <span class="badge bg-{% if complaint.priority == 'CRIT' %}danger{% elif complaint.priority == 'HIGH' %}warning{% elif complaint.priority == 'MED' %}info{% else %}secondary{% endif %} me-2">
                             {{ complaint.get_priority_display }}
                         </span>
-                        <span class="badge status-{{ complaint.status }}">
+                        <span class="badge bg-{% if complaint.status == 'RESV' %}success{% elif complaint.status == 'CLSD' %}dark{% else %}primary{% endif %}">
                             {{ complaint.get_status_display }}
                         </span>
                     </div>
                 </div>
                 <div class="card-body">
+                    {% if complaint.category == 'INFRA' or complaint.category == 'MAIN' %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-hard-hat me-2"></i>
+                        <strong>Infrastructure Issue</strong> - This complaint has been assigned to the Works Department.
+                        {% if is_hod %}
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#requestUpdateModal">
+                                <i class="fas fa-question-circle"></i> Request Update from Works
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
                     <div class="mb-4">
-                        <h6>Description</h6>
-                        <p class="p-3 bg-light rounded">{{ complaint.description|linebreaks }}</p>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Submitted by:</strong> {{ complaint.student.user.get_full_name }}</p>
-                            <p><strong>Student ID:</strong> {{ complaint.student.student_id }}</p>
-                            <p><strong>Department:</strong> {{ complaint.student.department }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Date Submitted:</strong> {{ complaint.created_at|date:"F d, Y, g:i a" }}</p>
-                            <p><strong>Category:</strong> {{ complaint.get_category_display }}</p>
-                            <p><strong>Sentiment Score:</strong> {{ complaint.sentiment_score|floatformat:2 }}</p>
+                        <h5 class="mb-3">Description</h5>
+                        <div class="p-3 bg-light rounded-3">
+                            {{ complaint.description|linebreaks }}
                         </div>
                     </div>
                     
-                    {% if is_staff %}
-                        <div class="mt-3">
-                            <h6>Assigned Staff</h6>
-                            <div class="d-flex flex-wrap">
-                                {% for staff in complaint.assigned_to.all %}
-                                    <span class="badge bg-secondary me-2 mb-2">
-                                        {{ staff.get_role_display }}: {{ staff.user.get_full_name }}
-                                    </span>
-                                {% endfor %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded-3 border">
+                                <h6 class="text-muted mb-3">Student Information</h6>
+                                <p><i class="fas fa-user me-2"></i> {{ complaint.student.user.get_full_name }}</p>
+                                <p><i class="fas fa-id-card me-2"></i> {{ complaint.student.student_id }}</p>
+                                <p><i class="fas fa-building me-2"></i> {{ complaint.student.department }}</p>
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded-3 border">
+                                <h6 class="text-muted mb-3">Complaint Details</h6>
+                                <p><i class="fas fa-calendar me-2"></i> {{ complaint.created_at|date:"M d, Y, g:i a" }}</p>
+                                <p><i class="fas fa-tag me-2"></i> {{ complaint.get_category_display }}</p>
+                                <p><i class="fas fa-chart-line me-2"></i> Sentiment: {{ complaint.sentiment_score|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if is_staff and complaint.assigned_to.exists %}
+                    <div class="mt-4">
+                        <h5 class="mb-3">Assigned Staff</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for staff in complaint.assigned_to.all %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-user-shield me-1"></i>
+                                    {{ staff.get_role_display }}: {{ staff.user.get_full_name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Comments Section -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Comments & Resolution ({{ comments.count }})</h5>
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0">Resolution Progress</h2>
+                        <span class="badge bg-secondary">{{ comments.count }} update{% if comments.count != 1 %}s{% endif %}</span>
+                    </div>
                 </div>
                 <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3"> {# Added for tracking button #}
+                        <h5>Comments</h5>
+                        <a href="{% url 'complaint_tracking' complaint.id %}" class="btn btn-outline-info btn-sm"> {# Added tracking button #}
+                            <i class="fas fa-history me-1"></i> View Full Tracking
+                        </a>
+                    </div>
                     {% if comments %}
-                        <div class="comment-timeline">
+                        <div class="timeline">
                             {% for comment in comments %}
-                                <div class="comment-item mb-4">
-                                    <div class="d-flex">
-                                        <div class="comment-avatar me-3">
-                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                {{ comment.staff.user.first_name|first }}{{ comment.staff.user.last_name|first }}
-                                            </div>
+                            <div class="timeline-item {% if comment.staff %}staff-comment{% else %}student-comment{% endif %}">
+                                <div class="timeline-badge">
+                                    {% if comment.staff %}
+                                        <i class="fas fa-user-shield"></i>
+                                    {% else %}
+                                        <i class="fas fa-user-graduate"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="timeline-panel">
+                                    <div class="timeline-heading">
+                                        <h6 class="timeline-title">
+                                            {% if comment.staff %}
+                                                {{ comment.staff.user.get_full_name }} 
+                                                <small class="text-muted">({{ comment.staff.get_role_display }})</small>
+                                            {% else %}
+                                                You
+                                            {% endif %}
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock me-1"></i> {{ comment.created_at|timesince }} ago
+                                        </small>
+                                    </div>
+                                    <div class="timeline-body">
+                                        <div class="p-3 bg-light rounded">
+                                            {{ comment.content|linebreaks }}
                                         </div>
-                                        <div class="comment-content flex-grow-1">
-                                            <div class="d-flex justify-content-between">
-                                                <h6 class="mb-1">
-                                                    {{ comment.staff.user.get_full_name }} 
-                                                    <span class="text-muted ms-2">{{ comment.staff.get_role_display }}</span>
-                                                </h6>
-                                                <small class="text-muted">{{ comment.created_at|date:"M d, Y, g:i a" }}</small>
-                                            </div>
-                                            <div class="p-3 bg-light rounded">
-                                                {{ comment.content|linebreaks }}
-                                            </div>
+                                        {% if comment.staff and is_vc_or_reg and complaint.is_critical %}
+                                        <div class="mt-2 alert alert-warning p-2 small">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            Critical case response from senior staff
                                         </div>
+                                        {% endif %}
                                     </div>
                                 </div>
+                            </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-muted">No comments yet.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No updates yet. Staff will add comments as they work on your complaint.
+                        </div>
                     {% endif %}
                     
                     {% if is_staff %}
-                        <hr>
-                        <form method="post">
-                            {% csrf_token %}
-                            <h6>Add Comment</h6>
-                            <div class="mb-3">
-                                {{ form.content }}
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                Submit Comment
-                            </button>
-                        </form>
+                    <hr>
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <h5 class="mb-3">Add Update</h5>
+                        <div class="mb-3">
+                            {{ comment_form.content }}
+                            <small class="text-muted">Your comment will be visible to the student</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary" name="comment">
+                            <i class="fas fa-paper-plane me-2"></i> Submit Update
+                        </button>
+                    </form>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
-        <!-- Sidebar -->
+
         <div class="col-lg-4">
-            <!-- Status Timeline -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Status Timeline</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h2 class="h5 mb-0">Case Timeline</h2>
                 </div>
                 <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        {% if complaint.status == 'PEND' or complaint.status == 'REVW' or complaint.status == 'ASSG' or complaint.status == 'RESV' or complaint.status == 'CLSD' %}
-                            <li class="list-group-item">
-                                <div class="d-flex">
-                                    <div class="timeline-icon bg-primary text-white me-3">
-                                        <i class="fas fa-file-alt"></i>
-                                    </div>
-                                    <div>
-                                        <h6>Submitted</h6>
-                                        <p class="small text-muted mb-0">{{ complaint.created_at|date:"M d, Y" }}</p>
-                                    </div>
-                                </div>
-                            </li>
-                        {% endif %}
+                    <div class="status-timeline">
+                        <div class="status-item {% if complaint.status == 'PEND' %}active{% endif %}">
+                            <div class="status-icon bg-primary">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6>Submitted</h6>
+                                <p class="small text-muted">{{ complaint.created_at|date:"M d, Y" }}</p>
+                            </div>
+                        </div>
                         
-                        {% if complaint.status == 'REVW' or complaint.status == 'ASSG' or complaint.status == 'RESV' or complaint.status == 'CLSD' %}
-                            <li class="list-group-item">
-                                <div class="d-flex">
-                                    <div class="timeline-icon bg-info text-white me-3">
-                                        <i class="fas fa-search"></i>
-                                    </div>
-                                    <div>
-                                        <h6>Under Review</h6>
-                                        <p class="small text-muted mb-0">Staff is reviewing your complaint</p>
-                                    </div>
-                                </div>
-                            </li>
-                        {% endif %}
+                        <div class="status-item {% if complaint.status == 'REVW' %}active{% elif complaint.status in 'ASSG,RESV,CLSD' %}completed{% endif %}">
+                            <div class="status-icon bg-info">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6>Under Review</h6>
+                                <p class="small text-muted">Staff is reviewing your case</p>
+                            </div>
+                        </div>
                         
-                        {% if complaint.status == 'ASSG' or complaint.status == 'RESV' or complaint.status == 'CLSD' %}
-                            <li class="list-group-item">
-                                <div class="d-flex">
-                                    <div class="timeline-icon bg-warning text-white me-3">
-                                        <i class="fas fa-user-check"></i>
-                                    </div>
-                                    <div>
-                                        <h6>Assigned</h6>
-                                        <p class="small text-muted mb-0">Assigned to appropriate staff</p>
-                                    </div>
-                                </div>
-                            </li>
-                        {% endif %}
+                        <div class="status-item {% if complaint.status == 'ASSG' %}active{% elif complaint.status in 'RESV,CLSD' %}completed{% endif %}">
+                            <div class="status-icon bg-warning">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6>Assigned</h6>
+                                <p class="small text-muted">Assigned to appropriate staff</p>
+                            </div>
+                        </div>
                         
-                        {% if complaint.status == 'RESV' or complaint.status == 'CLSD' %}
-                            <li class="list-group-item">
-                                <div class="d-flex">
-                                    <div class="timeline-icon bg-success text-white me-3">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div>
-                                        <h6>Resolved</h6>
-                                        <p class="small text-muted mb-0">Your complaint has been resolved</p>
-                                    </div>
-                                </div>
-                            </li>
-                        {% endif %}
+                        <div class="status-item {% if complaint.status == 'RESV' %}active{% elif complaint.status == 'CLSD' %}completed{% endif %}">
+                            <div class="status-icon bg-success">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6>Resolved</h6>
+                                <p class="small text-muted">Your complaint has been resolved</p>
+                            </div>
+                        </div>
                         
-                        {% if complaint.status == 'CLSD' %}
-                            <li class="list-group-item">
-                                <div class="d-flex">
-                                    <div class="timeline-icon bg-secondary text-white me-3">
-                                        <i class="fas fa-lock"></i>
-                                    </div>
-                                    <div>
-                                        <h6>Closed</h6>
-                                        <p class="small text-muted mb-0">This complaint is now closed</p>
-                                    </div>
-                                </div>
-                            </li>
-                        {% endif %}
-                    </ul>
+                        <div class="status-item {% if complaint.status == 'CLSD' %}active{% endif %}">
+                            <div class="status-icon bg-dark">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6>Closed</h6>
+                                <p class="small text-muted">Case officially closed</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
+
             {% if is_vc_or_reg and complaint.is_critical %}
-                <div class="card border-danger shadow-sm mb-4">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0">Critical Case Alert</h5>
+            <div class="card border-danger shadow-sm mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h5 mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Critical Case</h2>
+                </div>
+                <div class="card-body">
+                    <p>This complaint has been flagged as critical due to:</p>
+                    <ul>
+                        <li>High priority level</li>
+                        <li>Negative sentiment score</li>
+                        <li>Safety concerns</li>
+                    </ul>
+                    <p class="mb-0">Please provide immediate attention.</p>
+                </div>
+            </div>
+            {% endif %}
+
+<!-- Replace the non-functional buttons section with this updated version -->
+{% if not is_staff %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-light">
+        <h2 class="h5 mb-0">Your Actions</h2>
+    </div>
+    <div class="card-body">
+        <!-- Request Update Button - Opens Modal -->
+        <button class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#requestUpdateModal">
+            <i class="fas fa-question-circle me-2"></i> Request Update
+        </button>
+        
+        <!-- Mark as Resolved - Only show if complaint is in progress -->
+        {% if complaint.status == 'PROG' %}
+        <form method="post" class="mb-2" onsubmit="return confirm('Are you sure this complaint has been resolved to your satisfaction?')">
+            {% csrf_token %}
+            <input type="hidden" name="student_action" value="mark_resolved">
+            <button type="submit" class="btn btn-outline-success w-100">
+                <i class="fas fa-check-circle me-2"></i> Mark as Resolved
+            </button>
+        </form>
+        {% endif %}
+        
+        <!-- Escalate Complaint - Only show if complaint is not critical and has been pending for a while -->
+        {% if complaint.priority != 'CRIT' and complaint.status in 'PEND,ASSG,REVW' %}
+        <button class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#escalateModal">
+            <i class="fas fa-exclamation-triangle me-2"></i> Escalate Complaint
+        </button>
+        {% endif %}
+        
+        <!-- Show complaint tracking -->
+        <a href="{% url 'complaint_tracking' complaint.id %}" class="btn btn-outline-info w-100 mt-2">
+            <i class="fas fa-history me-2"></i> View Full Timeline
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Request Update Modal -->
+<div class="modal fade" id="requestUpdateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Status Update</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="updateRequestMessage" class="form-label">Your Message</label>
+                        <textarea class="form-control" id="updateRequestMessage" name="update_request_content" rows="4" required 
+                                  placeholder="Please provide an update on the status of my complaint..."></textarea>
+                        <div class="form-text">This message will be sent to the staff member handling your complaint.</div>
                     </div>
-                    <div class="card-body">
-                        <p>This complaint has been flagged as critical and requires your immediate attention.</p>
-                        <p>Please review and provide your comments on this matter.</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Current Status:</strong> {{ complaint.get_status_display }}
+                        {% if complaint.assigned_to %}
+                        <br><strong>Assigned to:</strong> {{ complaint.assigned_to.get_role_display }}
+                        {% endif %}
                     </div>
                 </div>
-            {% endif %}
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" name="student_action" value="request_update">
+                        <i class="fas fa-paper-plane me-2"></i> Send Request
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<!-- Escalate Complaint Modal -->
+<div class="modal fade" id="escalateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Escalate Complaint</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Escalating will notify senior management and mark this as high priority.
+                    </div>
+                    <div class="mb-3">
+                        <label for="escalationReason" class="form-label">Reason for Escalation</label>
+                        <select class="form-select" id="escalationReason" name="escalation_reason" required>
+                            <option value="">Select a reason...</option>
+                            <option value="no_response">No response from assigned staff</option>
+                            <option value="delayed_resolution">Resolution is taking too long</option>
+                            <option value="unsatisfactory_response">Unsatisfactory response from staff</option>
+                            <option value="urgent_issue">Issue has become more urgent</option>
+                            <option value="other">Other (please specify below)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="escalationDetails" class="form-label">Additional Details</label>
+                        <textarea class="form-control" id="escalationDetails" name="escalation_details" rows="4" required
+                                  placeholder="Please explain why you need to escalate this complaint..."></textarea>
+                    </div>
+                    <div class="text-muted small">
+                        <strong>Note:</strong> This will notify the Vice Chancellor and Registrar, and upgrade your complaint priority to HIGH.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger" name="student_action" value="escalate">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Escalate Complaint
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Timeline Styles */
+    .timeline {
+        position: relative;
+        padding-left: 50px;
+        list-style: none;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+    .timeline-badge {
+        position: absolute;
+        left: -50px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        border: 2px solid #dee2e6;
+        color: #495057;
+    }
+    .staff-comment .timeline-badge {
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+    .student-comment .timeline-badge {
+        border-color: #198754;
+        color: #198754;
+    }
+    .timeline-panel {
+        position: relative;
+        padding: 15px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+    }
+    
+    /* Status Timeline Styles */
+    .status-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+    .status-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    .status-item:not(:last-child):after {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 40px;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .status-item.completed:after {
+        background: #198754;
+    }
+    .status-item.active .status-icon {
+        background: #0d6efd !important;
+    }
+    .status-item.completed .status-icon {
+        background: #198754 !important;
+    }
+    .status-icon {
+        position: absolute;
+        left: -40px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+    .status-content {
+        padding-left: 15px;
+    }
+    
+    /* Works Department Alert */
+    .alert-warning {
+        background-color: #fff3cd;
+        border-color: #ffeeba;
+        color: #856404;
+    }
+</style>
 {% endblock %}

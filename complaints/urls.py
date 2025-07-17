@@ -13,10 +13,14 @@ urlpatterns = [
     
     # Complaint detail view
     path('complaint/<int:complaint_id>/', views.complaint_detail, name='complaint_detail'),
+
+    path('complaint/submit/', views.submit_complaint, name='submit_complaint'), 
     
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.account_type_selection, name='register'),
     path('register/student/', views.register_student_view, name='register_student'),
     path('register/staff/', views.register_staff_view, name='register_staff'),   
+    path('works/', views.works_dashboard, name='works_dashboard'),
+    path('complaint/<int:complaint_id>/track/', views.complaint_tracking_view, name='complaint_tracking'),
 ]

@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .badge.bg-critical { background-color: #dc3545 !important; }
+    .badge.bg-high { background-color: #fd7e14 !important; }
+    .badge.bg-medium { background-color: #ffc107 !important; color: #000; }
+    .badge.bg-low { background-color: #28a745 !important; }
+    
+    .badge.bg-pending { background-color: #6c757d !important; }
+    .badge.bg-review { background-color: #17a2b8 !important; }
+    .badge.bg-assigned { background-color: #007bff !important; }
+    .badge.bg-progress { background-color: #ffc107 !important; color: #000; }
+    .badge.bg-resolved { background-color: #28a745 !important; }
+    
+    .table-danger { background-color: rgba(220, 53, 69, 0.1) !important; }
+    .table-warning { background-color: rgba(255, 193, 7, 0.1) !important; }
+    
+    .stats-card {
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block title %}Works Department Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar me-3">
+                            <i class="fas fa-hard-hat fa-lg"></i> {# Changed icon for Works Dept #}
+                        </div>
+                        <div>
+                            <h4 class="mb-0">Works Department Dashboard</h4>
+                            <p class="text-muted mb-0">Welcome, {{ staff.user.get_full_name }}</p>
+                            {% if staff.department %}
+                            <small class="text-muted">{{ staff.department.name }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ stats.total_assigned_infra }}</h5>
+                    <p class="card-text small">Assigned Infra</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">{{ stats.pending_infra }}</h5>
+                    <p class="card-text small">Pending Infra</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">{{ stats.critical_infra }}</h5>
+                    <p class="card-text small">Critical Infra</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ stats.resolved_infra }}</h5>
+                    <p class="card-text small">Resolved Infra</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Filters</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'works_dashboard' %}" class="list-group-item list-group-item-action {% if not request.GET.status and not request.GET.priority and not request.GET.location_type %}active{% endif %}">
+                            <i class="fas fa-list me-2"></i>All Infrastructure Issues
+                            <span class="badge bg-secondary float-end">{{ stats.total_assigned_infra }}</span>
+                        </a>
+                        <a href="?status=PEND" class="list-group-item list-group-item-action {% if request.GET.status == 'PEND' %}active{% endif %}">
+                            <i class="fas fa-clock me-2"></i>Pending
+                            <span class="badge bg-warning float-end">{{ stats.pending_infra }}</span>
+                        </a>
+                        <a href="?status=PROG" class="list-group-item list-group-item-action {% if request.GET.status == 'PROG' %}active{% endif %}">
+                            <i class="fas fa-cog me-2"></i>In Progress
+                            <span class="badge bg-info float-end">{{ stats.in_progress_infra }}</span>
+                        </a>
+                        <a href="?priority=CRIT" class="list-group-item list-group-item-action {% if request.GET.priority == 'CRIT' %}active{% endif %}">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Critical
+                            <span class="badge bg-danger float-end">{{ stats.critical_infra }}</span>
+                        </a>
+                        <a href="?priority=HIGH" class="list-group-item list-group-item-action {% if request.GET.priority == 'HIGH' %}active{% endif %}">
+                            <i class="fas fa-exclamation me-2"></i>High Priority
+                            <span class="badge bg-warning float-end">{{ stats.high_priority_infra }}</span>
+                        </a>
+                        <a href="?status=RESV" class="list-group-item list-group-item-action {% if request.GET.status == 'RESV' %}active{% endif %}">
+                            <i class="fas fa-check-circle me-2"></i>Resolved
+                            <span class="badge bg-success float-end">{{ stats.resolved_infra }}</span>
+                        </a>
+                        <a href="?location_type=HOSTEL" class="list-group-item list-group-item-action {% if request.GET.location_type == 'HOSTEL' %}active{% endif %}">
+                            <i class="fas fa-bed me-2"></i>Hostel Issues
+                            <span class="badge bg-info float-end">{{ stats.hostel_infra }}</span>
+                        </a>
+                        <a href="?location_type=LECTURE" class="list-group-item list-group-item-action {% if request.GET.location_type == 'LECTURE' %}active{% endif %}">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>Lecture Room Issues
+                            <span class="badge bg-primary float-end">{{ stats.lecture_infra }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Infrastructure Complaints
+                        {% if request.GET.status %} - {{ request.GET.status|title }} {% elif request.GET.priority %} - {{ request.GET.priority|title }} Priority {% elif request.GET.location_type %} - {{ request.GET.location_type|title }} Location {% endif %}
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-filter me-1"></i>More Filters
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><h6 class="dropdown-header">By Status</h6></li>
+                            <li><a class="dropdown-item" href="?status=PEND">Pending</a></li>
+                            <li><a class="dropdown-item" href="?status=REVW">Under Review</a></li>
+                            <li><a class="dropdown-item" href="?status=ASSG">Assigned</a></li>
+                            <li><a class="dropdown-item" href="?status=PROG">In Progress</a></li>
+                            <li><a class="dropdown-item" href="?status=RESV">Resolved</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">By Priority</h6></li>
+                            <li><a class="dropdown-item" href="?priority=LOW">Low</a></li>
+                            <li><a class="dropdown-item" href="?priority=MED">Medium</a></li>
+                            <li><a class="dropdown-item" href="?priority=HIGH">High</a></li>
+                            <li><a class="dropdown-item" href="?priority=CRIT">Critical</a></li>
+                             <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">By Location Type</h6></li>
+                            <li><a class="dropdown-item" href="?location_type=LECTURE">Lecture Room</a></li>
+                            <li><a class="dropdown-item" href="?location_type=LAB">Laboratory</a></li>
+                            <li><a class="dropdown-item" href="?location_type=LIBRARY">Library</a></li>
+                            <li><a class="dropdown-item" href="?location_type=HOSTEL">Hostel</a></li>
+                            <li><a class="dropdown-item" href="?location_type=CAFETERIA">Cafeteria</a></li>
+                            <li><a class="dropdown-item" href="?location_type=SPORTS">Sports Facility</a></li>
+                            <li><a class="dropdown-item" href="?location_type=ADMIN">Administrative Building</a></li>
+                            <li><a class="dropdown-item" href="?location_type=OTHER">Other</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Category</th>
+                                        <th>Location</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Assigned To</th>
+                                        <th>Created At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for complaint in page_obj %}
+                                        <tr class="{% if complaint.priority == 'CRIT' %}table-danger{% elif complaint.priority == 'HIGH' %}table-warning{% endif %}">
+                                            <td>{{ complaint.id }}</td>
+                                            <td>
+                                                <a href="{% url 'complaint_detail' complaint.id %}" class="text-decoration-none fw-bold">
+                                                    {{ complaint.title }}
+                                                </a>
+                                            </td>
+                                            <td>{{ complaint.get_category_display }}</td>
+                                            <td>{{ complaint.location|default:"N/A" }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ complaint.priority|lower }}">
+                                                    {{ complaint.get_priority_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ complaint.status|lower }}">
+                                                    {{ complaint.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if complaint.assigned_to %}
+                                                    {{ complaint.assigned_to.user.get_full_name }}
+                                                {% else %}
+                                                    Unassigned
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ complaint.created_at|date:"M d, Y H:i" }}</td>
+                                            <td>
+                                                <a href="{% url 'complaint_detail' complaint.id %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {# Pagination #}
+                        {% if page_obj.has_other_pages %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a></li>
+                                {% endif %}
+                                {% for i in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == i %}
+                                        <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                    {% else %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if page_obj.has_next %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <div>
+                                <strong>No infrastructure complaints found</strong><br>
+                                {% if request.GET %}
+                                    No complaints match your current filters. <a href="{% url 'works_dashboard' %}">Clear filters</a> to see all infrastructure complaints.
+                                {% else %}
+                                    There are no infrastructure complaints assigned or tracked by the Works Department yet.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Auto-refresh every 30 seconds for real-time updates
+setTimeout(function() {
+    location.reload();
+}, 30000);
+
+// Add tooltip initialization if using Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %}
