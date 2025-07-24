@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="20mm"
+   height="20mm"
+   viewBox="0 0 20 20"
+   version="1.1"
+   id="svg1139"
+   sodipodi:docname="Account icon.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <title
+     id="title208">Account icon</title>
+  <defs
+     id="defs1133">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath5238-1-8-9-8-4">
+      <rect
+         transform="rotate(-90)"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;enable-background:accumulate"
+         id="rect5240-2-3-9-5-1"
+         width="315.35437"
+         height="744.09448"
+         x="-1016.9291"
+         y="1461.6753" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath5242-3-9-7-7">
+      <rect
+         transform="rotate(-90)"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;enable-background:accumulate"
+         id="rect5244-3-2-6-6"
+         width="315.35437"
+         height="744.09448"
+         x="-1016.9291"
+         y="1461.6753" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="6.9717708"
+     inkscape:cx="37.795276"
+     inkscape:cy="37.795276"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="944"
+     inkscape:window-height="1041"
+     inkscape:window-x="960"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:snap-bbox="true"
+     inkscape:bbox-paths="true"
+     inkscape:snap-bbox-edge-midpoints="true"
+     inkscape:bbox-nodes="true"
+     inkscape:snap-bbox-midpoints="true"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:snap-midpoints="true"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata1136">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Account icon</dc:title>
+        <dc:date>2018-09-30</dc:date>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>m1981</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>Public domain</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:publisher>
+          <cc:Agent>
+            <dc:title>Inkscape</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>icon</rdf:li>
+            <rdf:li>flat</rdf:li>
+            <rdf:li>IT</rdf:li>
+            <rdf:li>account</rdf:li>
+            <rdf:li>key</rdf:li>
+            <rdf:li>ID</rdf:li>
+            <rdf:li>identity</rdf:li>
+            <rdf:li>login</rdf:li>
+            <rdf:li>security</rdf:li>
+            <rdf:li>lock</rdf:li>
+            <rdf:li>autentication</rdf:li>
+            <rdf:li></rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:description>An account icon.</dc:description>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-163.37894,-111.19811)">
+    <path
+       inkscape:transform-center-y="-5.7740632"
+       inkscape:transform-center-x="-5.0290545"
+       inkscape:connector-curvature="0"
+       id="path4876-3"
+       d="m 179.58896,117.0133 a 3.7513602,3.7513602 0 0 0 -5.22754,-0.90369 3.7513602,3.7513602 0 0 0 -1.52558,3.73549 l -0.28818,0.20332 a 0.47170378,0.47170378 0 0 0 -0.65692,-0.11374 0.47170378,0.47170378 0 0 0 -0.11397,0.6569 l -5.29402,3.73216 0.26492,1.79556 1.60208,0.85292 0.59925,-0.42244 c -0.14984,-0.21293 -0.0992,-0.50679 0.11397,-0.65692 l 0.35066,-0.24717 c 0.2127,-0.15055 0.50749,-0.10013 0.65788,0.11304 l 0.85081,-0.59982 c -0.15008,-0.21293 -0.0992,-0.50679 0.11397,-0.6569 l 0.77057,-0.54323 c 0.21269,-0.15056 0.50756,-0.10014 0.6579,0.11303 l 0.40809,-0.28769 a 0.47170378,0.47170378 0 0 1 0.11467,-0.6576 0.47170378,0.47170378 0 0 1 0.65695,0.11373 0.47170378,0.47170378 0 0 0 0.65687,0.11374 0.47170378,0.47170378 0 0 0 0.11397,-0.6569 l 0.31994,-0.2256 a 3.7513602,3.7513602 0 0 0 3.94964,-0.22958 3.7513602,3.7513602 0 0 0 0.90463,-5.22823 z m -1.18259,0.83372 a 1.2065958,1.2065958 0 0 1 -0.29098,1.68194 1.2065958,1.2065958 0 0 1 -1.68197,-0.29102 1.2065958,1.2065958 0 0 1 0.291,-1.68197 1.2065958,1.2065958 0 0 1 1.68195,0.29105 z"
+       style="display:inline;opacity:1;vector-effect:none;fill:#4d4d4d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.30963314px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none" />
+  </g>
+</svg>

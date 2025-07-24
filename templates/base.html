@@ -40,6 +40,7 @@
         .toast {
             opacity: 1 !important;
         }
+
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -57,6 +58,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
                     </li>
+                    
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'analytics_dashboard' %}">Analytics</a>
+                        </li>
+                    
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}

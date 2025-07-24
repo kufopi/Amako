@@ -17,6 +17,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_protect
+from django.db import models  # For using models.F, models.Count, etc.
+from django.db.models import Count, Avg, Min, Max  # For aggregation functions
+from django.db.models.functions import TruncMonth  # For time-based grouping
+from django.db.models import DurationField, ExpressionWrapper  # For resolution time calculation
 
 @login_required
 def dashboard(request):
@@ -741,3 +745,71 @@ def complaint_tracking_view(request, complaint_id):
     }
     
     return render(request, 'complaint_tracking.html', context)
+
+@login_required
+def analytics_dashboard(request):
+    """Comprehensive analytics dashboard for the complaint system"""
+    # Check if user is staff (only staff should access analytics)
+    if not hasattr(request.user, 'staff'):
+        messages.error(request, "You don't have permission to view analytics")
+        return redirect('dashboard')
+
+    # Get all complaints for analysis
+    complaints = Complaint.objects.all()
+    
+    # Basic statistics
+    total_complaints = complaints.count()
+    complaints_by_status = complaints.values('status').annotate(count=models.Count('id')).order_by('status')
+    complaints_by_category = complaints.values('category').annotate(count=models.Count('id')).order_by('category')
+    complaints_by_priority = complaints.values('priority').annotate(count=models.Count('id')).order_by('priority')
+    
+    # Time-based analysis
+    complaints_by_month = complaints.annotate(
+        month=models.functions.TruncMonth('created_at')
+    ).values('month').annotate(
+        count=models.Count('id')
+    ).order_by('month')
+    
+    # Resolution time analysis
+    resolved_complaints = complaints.filter(status__in=['RESV', 'CLSD'])
+    avg_resolution_time = resolved_complaints.annotate(
+        resolution_time=models.ExpressionWrapper(
+            models.F('updated_at') - models.F('created_at'),
+            output_field=models.DurationField()
+        )
+    ).aggregate(avg_time=models.Avg('resolution_time'))['avg_time']
+    
+    # Department-wise analysis
+    complaints_by_department = complaints.values(
+        'student__department__name'
+    ).annotate(
+        count=models.Count('id')
+    ).order_by('-count')
+    
+    # Staff performance (top resolvers)
+    top_resolvers = Staff.objects.filter(
+        assigned_complaints__status__in=['RESV', 'CLSD']
+    ).annotate(
+        resolved_count=models.Count('assigned_complaints')
+    ).order_by('-resolved_count')[:5]
+    
+    # Sentiment analysis
+    sentiment_stats = complaints.aggregate(
+        avg_sentiment=models.Avg('sentiment_score'),
+        min_sentiment=models.Min('sentiment_score'),
+        max_sentiment=models.Max('sentiment_score')
+    )
+    
+    context = {
+        'total_complaints': total_complaints,
+        'complaints_by_status': complaints_by_status,
+        'complaints_by_category': complaints_by_category,
+        'complaints_by_priority': complaints_by_priority,
+        'complaints_by_month': complaints_by_month,
+        'avg_resolution_time': avg_resolution_time,
+        'complaints_by_department': complaints_by_department,
+        'top_resolvers': top_resolvers,
+        'sentiment_stats': sentiment_stats,
+    }
+    
+    return render(request, 'dashboard.html', context)

@@ -23,4 +23,5 @@ urlpatterns = [
     path('register/staff/', views.register_staff_view, name='register_staff'),   
     path('works/', views.works_dashboard, name='works_dashboard'),
     path('complaint/<int:complaint_id>/track/', views.complaint_tracking_view, name='complaint_tracking'),
+    path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
 ]
